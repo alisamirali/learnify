@@ -19,10 +19,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { authClient } from "@/lib/auth-client";
+import { useLogout } from "@/hooks/use-logout";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 
 type DropdownMenuProps = {
   avatar?: string;
@@ -31,21 +29,7 @@ type DropdownMenuProps = {
 };
 
 export function UserDropdown({ avatar, name, email }: DropdownMenuProps) {
-  const router = useRouter();
-
-  async function logout() {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          toast.success("Logged out successfully");
-          router.push("/");
-        },
-        onError: () => {
-          toast.error("Failed to log out");
-        },
-      },
-    });
-  }
+  const { logout } = useLogout();
 
   return (
     <DropdownMenu>
