@@ -62,3 +62,20 @@ export const navigationLinks: NavigationLink[] = [
     href: "/dashboard",
   },
 ];
+
+export const courseCategories = [
+  "Business & Management",
+  "Technology & IT",
+  "Personal Development",
+  "Health & Wellness",
+  "Language Learning",
+  "Arts & Creativity",
+  "Finance & Accounting",
+  "Education & Teaching",
+  "Science & Mathematics",
+  "Career Development",
+] as const;
+
+export const courseLevels = ["Beginner", "Intermediate", "Advanced"] as const;
+
+export const courseStatus = ["Draft", "Published", "Archived"] as const;
