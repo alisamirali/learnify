@@ -1,5 +1,6 @@
 "use client";
 
+import { RichTextEditor } from "@/components/rich-text-editor/rich-text-editor";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -138,7 +139,7 @@ export default function CreateCoursePage() {
                     <FormLabel>Small Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter small description"
+                        placeholder="Enter course small description"
                         {...field}
                         className="min-h-[120px]"
                       />
@@ -155,11 +156,7 @@ export default function CreateCoursePage() {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Enter course description"
-                        {...field}
-                        className="min-h-[120px]"
-                      />
+                      <RichTextEditor field={field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
