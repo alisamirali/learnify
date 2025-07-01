@@ -1,5 +1,6 @@
 "use client";
 
+import { Uploader } from "@/components/file-upload/uploader";
 import { RichTextEditor } from "@/components/rich-text-editor/rich-text-editor";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -170,10 +171,11 @@ export default function CreateCoursePage() {
                   <FormItem>
                     <FormLabel>Thumbnail Image</FormLabel>
                     <FormControl>
-                      <Input
+                      {/* <Input
                         placeholder="Enter course thumbnail url"
                         {...field}
-                      />
+                      /> */}
+                      <Uploader />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
