@@ -6,7 +6,12 @@ import { useCallback, useState } from "react";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-import { RenderEmptyState } from "./render-state";
+import {
+  RenderEmptyState,
+  RenderErrorState,
+  RenderUploadedState,
+  RenderUploadingState,
+} from "./render-state";
 
 type UploaderState = {
   id: string | null;
@@ -67,30 +72,82 @@ export function Uploader() {
 
       const { url, key } = await presignedResponse.json();
 
-      await new Promise((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
 
-        xhr.upload.onprogress = (event) => {};
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentageCompleted = (event.loaded / event.total) * 100;
+
+            setFileState((prev) => ({
+              ...prev,
+              progress: Math.round(percentageCompleted),
+            }));
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status === 200 || xhr.status === 204) {
+            setFileState((prev) => ({
+              ...prev,
+              progress: 100,
+              uploading: false,
+              key: key,
+            }));
+
+            toast.success("File uploaded successfully!");
+
+            resolve();
+          } else {
+            reject(new Error("Upload failed"));
+          }
+        };
+
+        xhr.onerror = () => {
+          reject(new Error("Network error during upload"));
+        };
+
+        xhr.open("PUT", url);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.send(file);
       });
-    } catch (error) {}
-  }
+    } catch {
+      toast.error("An error occurred while uploading the file.");
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-
-      setFileState(() => ({
-        file: file,
-        uploading: false,
+      setFileState((prev) => ({
+        ...prev,
         progress: 0,
-        objectUrl: URL.createObjectURL(file),
-        error: false,
-        id: uuidv4(),
-        isDeleting: false,
-        fileType: "image",
+        error: true,
+        uploading: false,
       }));
     }
-  }, []);
+  }
+
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      if (acceptedFiles.length > 0) {
+        const file = acceptedFiles[0];
+
+        if (fileState.objectUrl && !fileState.objectUrl.startsWith("http")) {
+          URL.revokeObjectURL(fileState.objectUrl);
+        }
+
+        setFileState(() => ({
+          file: file,
+          uploading: false,
+          progress: 0,
+          objectUrl: URL.createObjectURL(file),
+          error: false,
+          id: uuidv4(),
+          isDeleting: false,
+          fileType: "image",
+        }));
+
+        uploadFile(file);
+      }
+    },
+    [fileState.objectUrl]
+  );
 
   function rejectedFiles(rejectedFiles: FileRejection[]) {
     if (rejectedFiles.length) {
@@ -110,6 +167,27 @@ export function Uploader() {
         toast.error("The selected file is too large.");
       }
     }
+  }
+
+  function renderContent() {
+    if (fileState.uploading) {
+      return (
+        <RenderUploadingState
+          progress={fileState.progress}
+          file={fileState.file as File}
+        />
+      );
+    }
+
+    if (fileState.error) {
+      return <RenderErrorState />;
+    }
+
+    if (fileState.objectUrl) {
+      return <RenderUploadedState previewUrl={fileState.objectUrl} />;
+    }
+
+    return <RenderEmptyState isDragActive={false} />;
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -135,8 +213,7 @@ export function Uploader() {
     >
       <CardContent className="flex items-center justify-center h-full w-full p-4">
         <input {...getInputProps()} />
-        <RenderEmptyState isDragActive={isDragActive} />
-        {/* <RenderErrorState /> */}
+        {renderContent()}
       </CardContent>
     </Card>
   );
