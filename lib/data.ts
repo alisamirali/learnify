@@ -76,6 +76,6 @@ export const courseCategories = [
   "Career Development",
 ] as const;
 
-export const courseLevels = ["Beginner", "Intermediate", "Advanced"] as const;
+export const courseLevels = ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const;
 
-export const courseStatus = ["Draft", "Published", "Archived"] as const;
+export const courseStatus = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
