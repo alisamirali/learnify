@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CloudUploadIcon, ImageIcon, XIcon } from "lucide-react";
+import { CloudUploadIcon, ImageIcon, Loader2, XIcon } from "lucide-react";
 import Image from "next/image";
 
 export function RenderEmptyState({ isDragActive }: { isDragActive: boolean }) {
@@ -47,7 +47,15 @@ export function RenderErrorState() {
   );
 }
 
-export function RenderUploadedState({ previewUrl }: { previewUrl: string }) {
+export function RenderUploadedState({
+  previewUrl,
+  isDeleting,
+  handleRemoveFile,
+}: {
+  previewUrl: string;
+  isDeleting: boolean;
+  handleRemoveFile: () => void;
+}) {
   return (
     <div>
       <Image
@@ -60,9 +68,15 @@ export function RenderUploadedState({ previewUrl }: { previewUrl: string }) {
       <Button
         variant="destructive"
         size="icon"
+        onClick={handleRemoveFile}
+        disabled={isDeleting}
         className={cn("absolute top-4 right-4 cursor-pointer")}
       >
-        <XIcon className="size-4" />
+        {isDeleting ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : (
+          <XIcon className="size-4" />
+        )}
       </Button>
     </div>
   );
@@ -77,7 +91,7 @@ export function RenderUploadingState({
 }) {
   return (
     <div className="text-center flex items-center justify-center flex-col">
-      <p>{progress}</p>
+      <p>{progress}%</p>
       <p className="mt-2 text-sm font-medium text-foreground">Uploading...</p>
       <p className="mt-1 text-xs text-muted-foreground truncate max-w-xs">
         {file.name}
