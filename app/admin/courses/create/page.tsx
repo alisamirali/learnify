@@ -1,5 +1,6 @@
 "use client";
 
+import { CreateCourse } from "@/app/admin/courses/create/actions";
 import { Uploader } from "@/components/file-upload/uploader";
 import { RichTextEditor } from "@/components/rich-text-editor/rich-text-editor";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -27,15 +28,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useTryCatch } from "@/hooks/use-try-catch";
 import { courseCategories, courseLevels, courseStatus } from "@/lib/data";
 import { courseSchema, CourseSchema } from "@/lib/zod-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, PlusIcon, SparkleIcon } from "lucide-react";
+import { ArrowLeft, Loader2, PlusIcon, SparkleIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import slugify from "slugify";
+import { toast } from "sonner";
 
 export default function CreateCoursePage() {
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const form = useForm<CourseSchema>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -44,16 +51,31 @@ export default function CreateCoursePage() {
       fileKey: "",
       price: 0,
       duration: 0,
-      level: "Beginner",
+      level: "BEGINNER",
       category: "Personal Development",
       smallDescription: "",
       slug: "",
-      status: "Draft",
+      status: "DRAFT",
     },
   });
 
-  function onSubmit(data: CourseSchema) {
-    console.log("Form submitted with data:", data);
+  function onSubmit(values: CourseSchema) {
+    startTransition(async () => {
+      const { data: result, error } = await useTryCatch(CreateCourse(values));
+
+      if (error) {
+        toast.error("An unexpected error occurred while creating the course.");
+        return;
+      }
+
+      if (result.status === "success") {
+        toast.success(result.message);
+        form.reset();
+        router.push("/admin/courses");
+      } else if (result.status === "error") {
+        toast.error(result.message);
+      }
+    });
   }
 
   function generateSlug(title: string) {
@@ -186,7 +208,10 @@ export default function CreateCoursePage() {
                     <FormItem>
                       <FormLabel>Category</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select category" />
@@ -214,7 +239,10 @@ export default function CreateCoursePage() {
                     <FormItem>
                       <FormLabel>Level</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select level" />
@@ -224,7 +252,8 @@ export default function CreateCoursePage() {
                           <SelectContent>
                             {courseLevels.map((level) => (
                               <SelectItem key={level} value={level}>
-                                {level}
+                                {level.charAt(0).toUpperCase() +
+                                  level.slice(1).toLowerCase()}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -279,7 +308,10 @@ export default function CreateCoursePage() {
                   <FormItem>
                     <FormLabel>Status</FormLabel>
                     <FormControl>
-                      <Select onValueChange={field.onChange}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select status" />
@@ -289,7 +321,8 @@ export default function CreateCoursePage() {
                         <SelectContent>
                           {courseStatus.map((status) => (
                             <SelectItem key={status} value={status}>
-                              {status}
+                              {status.charAt(0).toUpperCase() +
+                                status.slice(1).toLowerCase()}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -300,8 +333,21 @@ export default function CreateCoursePage() {
                 )}
               />
 
-              <Button type="submit" className="w-fit">
-                Create Course <PlusIcon className="ms-1 size-4" />
+              <Button
+                type="submit"
+                className="w-fit cursor-pointer"
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <>
+                    Creating...
+                    <Loader2 className="animate-spin ml-1" />
+                  </>
+                ) : (
+                  <>
+                    Create Course <PlusIcon className="ms-1 size-4" />
+                  </>
+                )}
               </Button>
             </form>
           </Form>
