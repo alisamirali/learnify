@@ -22,8 +22,9 @@ const aj = arcjet
     })
   );
 
-export async function createCourse(
-  values: CourseSchemaType
+export async function editCourse(
+  data: CourseSchemaType,
+  courseId: string
 ): Promise<ApiResponse> {
   const session = await requireAdmin();
 
@@ -47,30 +48,33 @@ export async function createCourse(
       }
     }
 
-    const validatedData = courseSchema.safeParse(values);
+    const result = courseSchema.safeParse(data);
 
-    if (!validatedData.success) {
+    if (!result.success) {
       return {
         status: "error",
-        message: "Invalid course data",
+        message: "Invalid course data.",
       };
     }
 
-    await prisma.course.create({
+    await prisma.course.update({
+      where: {
+        id: courseId,
+        userId: session.user.id,
+      },
       data: {
-        ...validatedData.data,
-        userId: session?.user.id as string,
+        ...result.data,
       },
     });
 
     return {
       status: "success",
-      message: "Course created successfully",
+      message: "Course updated successfully.",
     };
   } catch {
     return {
       status: "error",
-      message: "Failed to create course",
+      message: "Failed to update course.",
     };
   }
 }

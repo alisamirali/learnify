@@ -1,6 +1,6 @@
 "use client";
 
-import { CreateCourse } from "@/app/admin/courses/create/actions";
+import { createCourse } from "@/app/admin/courses/create/actions";
 import { Uploader } from "@/components/file-upload/uploader";
 import { RichTextEditor } from "@/components/rich-text-editor/rich-text-editor";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -30,7 +30,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useTryCatch } from "@/hooks/use-try-catch";
 import { courseCategories, courseLevels, courseStatus } from "@/lib/data";
-import { courseSchema, CourseSchema } from "@/lib/zod-schema";
+import { courseSchema, CourseSchemaType } from "@/lib/zod-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2, PlusIcon, SparkleIcon } from "lucide-react";
 import Link from "next/link";
@@ -43,7 +43,7 @@ import { toast } from "sonner";
 export default function CreateCoursePage() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const form = useForm<CourseSchema>({
+  const form = useForm<CourseSchemaType>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       title: "",
@@ -59,9 +59,9 @@ export default function CreateCoursePage() {
     },
   });
 
-  function onSubmit(values: CourseSchema) {
+  function onSubmit(values: CourseSchemaType) {
     startTransition(async () => {
-      const { data: result, error } = await useTryCatch(CreateCourse(values));
+      const { data: result, error } = await useTryCatch(createCourse(values));
 
       if (error) {
         toast.error("An unexpected error occurred while creating the course.");
