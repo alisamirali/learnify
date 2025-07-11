@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
   DndContext,
+  DragEndEvent,
   DraggableSyntheticListeners,
   KeyboardSensor,
   PointerSensor,
@@ -34,7 +35,9 @@ import {
   TrashIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { reorderChapters, reorderLessons } from "../actions";
 
 type CourseStructureProps = {
   data: AdminCourseSingleType;
@@ -52,19 +55,45 @@ type SortableItemProps = {
 
 export function CourseStructure({ data }: CourseStructureProps) {
   const initialItems =
-    data.chapters.map((chapter) => ({
-      id: chapter.id,
-      title: chapter.title,
-      order: chapter.position,
-      isOpen: true,
-      lessons: chapter.lessons.map((lesson) => ({
-        id: lesson.id,
-        title: lesson.title,
-        order: lesson.position,
-      })),
-    })) || [];
+    data.chapters
+      .sort((a, b) => a.position - b.position) // Sort chapters by position
+      .map((chapter) => ({
+        id: chapter.id,
+        title: chapter.title,
+        order: chapter.position,
+        isOpen: true,
+        lessons: chapter.lessons
+          .sort((a, b) => a.position - b.position) // Sort lessons by position
+          .map((lesson) => ({
+            id: lesson.id,
+            title: lesson.title,
+            order: lesson.position,
+          })),
+      })) || [];
 
   const [items, setItems] = useState(initialItems);
+
+  useEffect(() => {
+    setItems((prevItems) => {
+      const updatedItems =
+        prevItems.map((chapter) => ({
+          id: chapter.id,
+          title: chapter.title,
+          order: chapter.order,
+          isOpen:
+            prevItems.find((item) => item.id === chapter.id)?.isOpen ?? true,
+          lessons: chapter.lessons
+            .sort((a, b) => a.order - b.order)
+            .map((lesson) => ({
+              id: lesson.id,
+              title: lesson.title,
+              order: lesson.order,
+            })),
+        })) || [];
+
+      return updatedItems;
+    });
+  }, [data]);
 
   function SortableItem({ id, children, className, data }: SortableItemProps) {
     const {
@@ -93,16 +122,96 @@ export function CourseStructure({ data }: CourseStructureProps) {
     );
   }
 
-  function handleDragEnd(event: any) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
-    if (active.id !== over.id) {
-      setItems((items) => {
-        const oldIndex = items.indexOf(active.id);
-        const newIndex = items.indexOf(over.id);
+    if (!over || active.id === over.id) {
+      return;
+    }
 
-        return arrayMove(items, oldIndex, newIndex);
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    // Handle chapter reordering
+    if (activeData?.type === "chapter" && overData?.type === "chapter") {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+      const newItems = arrayMove(items, oldIndex, newIndex);
+
+      // Update state immediately
+      setItems(newItems);
+
+      // Update positions in database
+      const chaptersWithNewPositions = newItems.map((chapter, index) => ({
+        id: chapter.id,
+        position: index + 1,
+      }));
+
+      reorderChapters(data.id, chaptersWithNewPositions).then((result) => {
+        if (result.status === "error") {
+          toast.error(result.message);
+          // Revert the state if database update failed
+          setItems(items);
+        } else {
+          toast.success(result.message);
+        }
       });
+    }
+
+    // Handle lesson reordering within the same chapter
+    if (activeData?.type === "lesson" && overData?.type === "lesson") {
+      const activeChapterId = activeData.chapterId;
+      const overChapterId = overData.chapterId;
+
+      // Only allow reordering within the same chapter
+      if (activeChapterId === overChapterId) {
+        const newItems = items.map((chapter) => {
+          if (chapter.id === activeChapterId) {
+            const oldIndex = chapter.lessons.findIndex(
+              (lesson) => lesson.id === active.id
+            );
+            const newIndex = chapter.lessons.findIndex(
+              (lesson) => lesson.id === over.id
+            );
+
+            const newLessons = arrayMove(chapter.lessons, oldIndex, newIndex);
+
+            return {
+              ...chapter,
+              lessons: newLessons,
+            };
+          }
+          return chapter;
+        });
+
+        // Update state immediately
+        setItems(newItems);
+
+        // Find the updated chapter to get the new lessons order
+        const updatedChapter = newItems.find(
+          (chapter) => chapter.id === activeChapterId
+        );
+        if (updatedChapter) {
+          const lessonsWithNewPositions = updatedChapter.lessons.map(
+            (lesson, index) => ({
+              id: lesson.id,
+              position: index + 1,
+            })
+          );
+
+          reorderLessons(activeChapterId, lessonsWithNewPositions).then(
+            (result) => {
+              if (result.status === "error") {
+                toast.error(result.message);
+                // Revert the state if database update failed
+                setItems(items);
+              } else {
+                toast.success(result.message);
+              }
+            }
+          );
+        }
+      }
     }
   }
 
@@ -134,8 +243,11 @@ export function CourseStructure({ data }: CourseStructureProps) {
           <CardTitle>Chapters</CardTitle>
         </CardHeader>
 
-        <CardContent>
-          <SortableContext strategy={verticalListSortingStrategy} items={items}>
+        <CardContent className="space-y-5">
+          <SortableContext
+            strategy={verticalListSortingStrategy}
+            items={items.map((item) => item.id)}
+          >
             {items.map((item) => (
               <SortableItem
                 key={item.id}
