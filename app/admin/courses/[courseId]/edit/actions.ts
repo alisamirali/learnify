@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { ApiResponse } from "@/lib/types";
 import { courseSchema, CourseSchemaType } from "@/lib/zod-schema";
 import { request } from "@arcjet/next";
+import { revalidatePath } from "next/cache";
 
 const aj = arcjet
   .withRule(
@@ -75,6 +76,72 @@ export async function editCourse(
     return {
       status: "error",
       message: "Failed to update course.",
+    };
+  }
+}
+
+export async function reorderChapters(
+  courseId: string,
+  chapters: { id: string; position: number }[]
+): Promise<ApiResponse> {
+  try {
+    await requireAdmin();
+
+    // Update all chapter positions in a transaction
+    await prisma.$transaction(
+      chapters.map((chapter) =>
+        prisma.chapter.update({
+          where: { id: chapter.id },
+          data: { position: chapter.position },
+        })
+      )
+    );
+
+    // Revalidate the course edit page to reflect changes
+    revalidatePath(`/admin/courses/${courseId}/edit`);
+
+    return {
+      status: "success",
+      message: "Chapters reordered successfully",
+    };
+  } catch (error) {
+    console.error("Error reordering chapters:", error);
+    return {
+      status: "error",
+      message: "Failed to reorder chapters",
+    };
+  }
+}
+
+export async function reorderLessons(
+  chapterId: string,
+  lessons: { id: string; position: number }[]
+): Promise<ApiResponse> {
+  try {
+    await requireAdmin();
+
+    // Update all lesson positions in a transaction
+    await prisma.$transaction(
+      lessons.map((lesson) =>
+        prisma.lesson.update({
+          where: { id: lesson.id },
+          data: { position: lesson.position },
+        })
+      )
+    );
+
+    // Revalidate the chapter edit page to reflect changes
+    revalidatePath(`/admin/courses/${chapterId}/edit`);
+
+    return {
+      status: "success",
+      message: "Lessons reordered successfully",
+    };
+  } catch (error) {
+    console.error("Error reordering lessons:", error);
+    return {
+      status: "error",
+      message: "Failed to reorder lessons",
     };
   }
 }
