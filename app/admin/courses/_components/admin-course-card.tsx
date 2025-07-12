@@ -8,9 +8,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useConstructUrl } from "@/hooks/use-construct";
 import {
   ArrowRight,
+  DollarSign,
   Eye,
   MoreVertical,
   Pencil,
@@ -50,7 +52,7 @@ export function AdminCourseCard({ course }: { course: AdminCourseType }) {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link href={`admin/courses/${course.id}/delete`}>
+              <Link href={`/admin/courses/${course.id}/delete`}>
                 <Trash2 className="size-4 mr-1.5 text-destructive" />
                 Delete Course
               </Link>
@@ -80,7 +82,7 @@ export function AdminCourseCard({ course }: { course: AdminCourseType }) {
           {course.smallDescription}
         </p>
 
-        <div className="mt-4 flex items-center gap-x-5">
+        <div className="mt-4 flex items-center gap-x-6">
           <div className="flex items-center gap-x-2">
             <TimerIcon className="size-6 p-1 rounded-md text-primary bg-primary/10" />
             <p className="text-sm text-muted-foreground">{course.duration}h</p>
@@ -89,6 +91,11 @@ export function AdminCourseCard({ course }: { course: AdminCourseType }) {
           <div className="flex items-center gap-x-2">
             <School className="size-6 p-1 rounded-md text-primary bg-primary/10" />
             <p className="text-sm text-muted-foreground">{course.level}</p>
+          </div>
+
+          <div className="flex items-center gap-x-2">
+            <DollarSign className="size-6 p-1 rounded-md text-primary bg-primary/10" />
+            <p className="text-sm text-muted-foreground">{course.price}</p>
           </div>
         </div>
 
@@ -100,6 +107,45 @@ export function AdminCourseCard({ course }: { course: AdminCourseType }) {
         >
           Edit Course <ArrowRight className="size-4" />
         </Link>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function AdminCourseCardSkeleton() {
+  return (
+    <Card className="group relative py-0 gap-0">
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+        <Skeleton className="h-6 w-16 rounded-full" />
+        <Skeleton className="size-8 rounded-md" />
+      </div>
+
+      <div className="w-full relative h-fit">
+        <Skeleton className="w-full rounded-t-lg aspect-video h-[250px] object-cover" />
+      </div>
+
+      <CardContent className="p-4">
+        <Skeleton className="h-6 w-3/4 mb-2 rounded" />
+        <Skeleton className="h-4 w-full mb-4 rounded" />
+
+        <div className="mt-4 flex items-center gap-x-5">
+          <div className="flex items-center gap-x-2">
+            <Skeleton className="size-6 rounded-md" />
+            <Skeleton className="h-4 w-10 rounded" />
+          </div>
+
+          <div className="flex items-center gap-x-2">
+            <Skeleton className="size-6 rounded-md" />
+            <Skeleton className="h-4 w-10 rounded" />
+          </div>
+
+          <div className="flex items-center gap-x-2">
+            <Skeleton className="size-6 rounded-md" />
+            <Skeleton className="h-4 w-10 rounded" />
+          </div>
+        </div>
+
+        <Skeleton className="h-10 w-full mt-4 rounded" />
       </CardContent>
     </Card>
   );
