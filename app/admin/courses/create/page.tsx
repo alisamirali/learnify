@@ -193,7 +193,11 @@ export default function CreateCoursePage() {
                   <FormItem>
                     <FormLabel>Thumbnail Image</FormLabel>
                     <FormControl>
-                      <Uploader value={field.value} onChange={field.onChange} />
+                      <Uploader
+                        value={field.value}
+                        onChange={field.onChange}
+                        fileTypeAccepted="image"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -341,11 +345,11 @@ export default function CreateCoursePage() {
                 {isPending ? (
                   <>
                     Creating...
-                    <Loader2 className="animate-spin ml-1" />
+                    <Loader2 className="animate-spin" />
                   </>
                 ) : (
                   <>
-                    Create Course <PlusIcon className="ms-1 size-4" />
+                    Create Course <PlusIcon className="size-4" />
                   </>
                 )}
               </Button>

@@ -29,9 +29,10 @@ type UploaderState = {
 type UploaderProps = {
   value?: string;
   onChange?: (value: string) => void;
+  fileTypeAccepted: "image" | "video";
 };
 
-export function Uploader({ value, onChange }: UploaderProps) {
+export function Uploader({ value, onChange, fileTypeAccepted }: UploaderProps) {
   const fileUrl = useConstructUrl(value || "");
 
   const [fileState, setFileState] = useState<UploaderState>({
@@ -41,99 +42,102 @@ export function Uploader({ value, onChange }: UploaderProps) {
     uploading: false,
     progress: 0,
     isDeleting: false,
-    fileType: "image",
+    fileType: fileTypeAccepted,
     key: value,
-    objectUrl: fileUrl,
+    objectUrl: value ? fileUrl : undefined,
   });
 
-  async function uploadFile(file: File) {
-    setFileState((prev) => ({
-      ...prev,
-      uploading: true,
-      progress: 0,
-    }));
+  const uploadFile = useCallback(
+    async (file: File) => {
+      setFileState((prev) => ({
+        ...prev,
+        uploading: true,
+        progress: 0,
+      }));
 
-    try {
-      const presignedResponse = await fetch("/api/s3/upload", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type,
-          size: file.size,
-          isImage: true, // Assuming the file is an image
-        }),
-      });
+      try {
+        const presignedResponse = await fetch("/api/s3/upload", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            contentType: file.type,
+            size: file.size,
+            isImage: fileTypeAccepted === "image",
+          }),
+        });
 
-      if (!presignedResponse.ok) {
-        toast.error("Failed to generate presigned URL. Please try again.");
+        if (!presignedResponse.ok) {
+          toast.error("Failed to generate presigned URL. Please try again.");
+
+          setFileState((prev) => ({
+            ...prev,
+            uploading: false,
+            progress: 0,
+            error: true,
+          }));
+
+          return;
+        }
+
+        const { url, key } = await presignedResponse.json();
+
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percentageCompleted = (event.loaded / event.total) * 100;
+
+              setFileState((prev) => ({
+                ...prev,
+                progress: Math.round(percentageCompleted),
+              }));
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status === 200 || xhr.status === 204) {
+              setFileState((prev) => ({
+                ...prev,
+                progress: 100,
+                uploading: false,
+                key: key,
+              }));
+
+              onChange?.(key);
+
+              toast.success("File uploaded successfully!");
+
+              resolve();
+            } else {
+              reject(new Error("Upload failed"));
+            }
+          };
+
+          xhr.onerror = () => {
+            reject(new Error("Network error during upload"));
+          };
+
+          xhr.open("PUT", url);
+          xhr.setRequestHeader("Content-Type", file.type);
+          xhr.send(file);
+        });
+      } catch {
+        toast.error("An error occurred while uploading the file.");
 
         setFileState((prev) => ({
           ...prev,
-          uploading: false,
           progress: 0,
           error: true,
+          uploading: false,
         }));
-
-        return;
       }
-
-      const { url, key } = await presignedResponse.json();
-
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percentageCompleted = (event.loaded / event.total) * 100;
-
-            setFileState((prev) => ({
-              ...prev,
-              progress: Math.round(percentageCompleted),
-            }));
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status === 200 || xhr.status === 204) {
-            setFileState((prev) => ({
-              ...prev,
-              progress: 100,
-              uploading: false,
-              key: key,
-            }));
-
-            onChange?.(key);
-
-            toast.success("File uploaded successfully!");
-
-            resolve();
-          } else {
-            reject(new Error("Upload failed"));
-          }
-        };
-
-        xhr.onerror = () => {
-          reject(new Error("Network error during upload"));
-        };
-
-        xhr.open("PUT", url);
-        xhr.setRequestHeader("Content-Type", file.type);
-        xhr.send(file);
-      });
-    } catch {
-      toast.error("An error occurred while uploading the file.");
-
-      setFileState((prev) => ({
-        ...prev,
-        progress: 0,
-        error: true,
-        uploading: false,
-      }));
-    }
-  }
+    },
+    [fileTypeAccepted, onChange]
+  );
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -152,13 +156,13 @@ export function Uploader({ value, onChange }: UploaderProps) {
           error: false,
           id: uuidv4(),
           isDeleting: false,
-          fileType: "image",
+          fileType: fileTypeAccepted,
         }));
 
         uploadFile(file);
       }
     },
-    [fileState.objectUrl]
+    [fileState.objectUrl, uploadFile, fileTypeAccepted]
   );
 
   async function handleRemoveFile() {
@@ -203,7 +207,7 @@ export function Uploader({ value, onChange }: UploaderProps) {
         objectUrl: undefined,
         error: false,
         id: null,
-        fileType: "image",
+        fileType: fileTypeAccepted,
         isDeleting: false,
       }));
 
@@ -259,6 +263,7 @@ export function Uploader({ value, onChange }: UploaderProps) {
           previewUrl={fileState.objectUrl}
           isDeleting={fileState.isDeleting}
           handleRemoveFile={handleRemoveFile}
+          fileType={fileState.fileType}
         />
       );
     }
@@ -276,12 +281,11 @@ export function Uploader({ value, onChange }: UploaderProps) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      "image/*": [],
-    },
+    accept:
+      fileTypeAccepted === "video" ? { "video/*": [] } : { "image/*": [] },
     maxFiles: 1,
     multiple: false,
-    maxSize: 5 * 1024 * 1024, // 5 MB
+    maxSize: fileTypeAccepted === "video" ? 500 * 1024 * 1024 : 5 * 1024 * 1024, // 500MB for video, 5MB for image
     onDropRejected: rejectedFiles,
     disabled: fileState.uploading || !!fileState.objectUrl,
   });
