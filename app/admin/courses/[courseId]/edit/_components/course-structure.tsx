@@ -32,11 +32,14 @@ import {
   ChevronRight,
   FileText,
   GripVertical,
-  TrashIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { DeleteChapterModal } from "../_components/delete-chapter-modal";
+import { DeleteLessonModal } from "../_components/delete-lesson-modal";
+import { NewChapterModal } from "../_components/new-chapter-modal";
+import { NewLessonModal } from "../_components/new-lesson-modal";
 import { reorderChapters, reorderLessons } from "../actions";
 
 type CourseStructureProps = {
@@ -60,40 +63,41 @@ export function CourseStructure({ data }: CourseStructureProps) {
       .map((chapter) => ({
         id: chapter.id,
         title: chapter.title,
-        order: chapter.position,
+        position: chapter.position, // Use position instead of order
         isOpen: true,
         lessons: chapter.lessons
           .sort((a, b) => a.position - b.position) // Sort lessons by position
           .map((lesson) => ({
             id: lesson.id,
             title: lesson.title,
-            order: lesson.position,
+            position: lesson.position, // Use position instead of order
           })),
       })) || [];
 
   const [items, setItems] = useState(initialItems);
+  const isReorderingRef = useRef(false);
 
+  // Only update state when data changes and we're not in the middle of reordering
   useEffect(() => {
-    setItems((prevItems) => {
-      const updatedItems =
-        prevItems.map((chapter) => ({
+    if (!isReorderingRef.current) {
+      const newItems = data.chapters
+        .sort((a, b) => a.position - b.position)
+        .map((chapter) => ({
           id: chapter.id,
           title: chapter.title,
-          order: chapter.order,
-          isOpen:
-            prevItems.find((item) => item.id === chapter.id)?.isOpen ?? true,
+          position: chapter.position,
+          isOpen: items.find((item) => item.id === chapter.id)?.isOpen ?? true, // Preserve open state
           lessons: chapter.lessons
-            .sort((a, b) => a.order - b.order)
+            .sort((a, b) => a.position - b.position)
             .map((lesson) => ({
               id: lesson.id,
               title: lesson.title,
-              order: lesson.order,
+              position: lesson.position,
             })),
-        })) || [];
-
-      return updatedItems;
-    });
-  }, [data]);
+        }));
+      setItems(newItems);
+    }
+  }, [data.chapters]);
 
   function SortableItem({ id, children, className, data }: SortableItemProps) {
     const {
@@ -134,8 +138,11 @@ export function CourseStructure({ data }: CourseStructureProps) {
 
     // Handle chapter reordering
     if (activeData?.type === "chapter" && overData?.type === "chapter") {
+      isReorderingRef.current = true;
+
       const oldIndex = items.findIndex((item) => item.id === active.id);
       const newIndex = items.findIndex((item) => item.id === over.id);
+      const previousItems = [...items]; // Capture current state for potential reversion
       const newItems = arrayMove(items, oldIndex, newIndex);
 
       // Update state immediately
@@ -148,10 +155,11 @@ export function CourseStructure({ data }: CourseStructureProps) {
       }));
 
       reorderChapters(data.id, chaptersWithNewPositions).then((result) => {
+        isReorderingRef.current = false;
         if (result.status === "error") {
           toast.error(result.message);
           // Revert the state if database update failed
-          setItems(items);
+          setItems(previousItems);
         } else {
           toast.success(result.message);
         }
@@ -165,6 +173,10 @@ export function CourseStructure({ data }: CourseStructureProps) {
 
       // Only allow reordering within the same chapter
       if (activeChapterId === overChapterId) {
+        isReorderingRef.current = true;
+
+        const previousItems = [...items]; // Capture current state for potential reversion
+
         const newItems = items.map((chapter) => {
           if (chapter.id === activeChapterId) {
             const oldIndex = chapter.lessons.findIndex(
@@ -173,6 +185,10 @@ export function CourseStructure({ data }: CourseStructureProps) {
             const newIndex = chapter.lessons.findIndex(
               (lesson) => lesson.id === over.id
             );
+
+            if (oldIndex === -1 || newIndex === -1) {
+              return chapter;
+            }
 
             const newLessons = arrayMove(chapter.lessons, oldIndex, newIndex);
 
@@ -201,10 +217,11 @@ export function CourseStructure({ data }: CourseStructureProps) {
 
           reorderLessons(activeChapterId, lessonsWithNewPositions).then(
             (result) => {
+              isReorderingRef.current = false;
               if (result.status === "error") {
                 toast.error(result.message);
                 // Revert the state if database update failed
-                setItems(items);
+                setItems(previousItems);
               } else {
                 toast.success(result.message);
               }
@@ -225,6 +242,64 @@ export function CourseStructure({ data }: CourseStructureProps) {
     );
   }
 
+  function handleChapterCreated(newChapter: {
+    id: string;
+    title: string;
+    position: number;
+  }) {
+    const newChapterItem = {
+      id: newChapter.id,
+      title: newChapter.title,
+      position: newChapter.position, // Use position instead of order
+      isOpen: true,
+      lessons: [],
+    };
+    setItems([...items, newChapterItem]);
+  }
+
+  function handleLessonCreated(newLesson: {
+    id: string;
+    title: string;
+    position: number;
+    chapterId: string;
+  }) {
+    setItems((prevItems) =>
+      prevItems.map((chapter) => {
+        if (chapter.id === newLesson.chapterId) {
+          return {
+            ...chapter,
+            lessons: [
+              ...chapter.lessons,
+              {
+                id: newLesson.id,
+                title: newLesson.title,
+                position: newLesson.position, // Use position instead of order
+              },
+            ].sort((a, b) => a.position - b.position), // Use position instead of order
+          };
+        }
+        return chapter;
+      })
+    );
+  }
+
+  function handleLessonDeleted(deletedLessonId: string) {
+    setItems((prevItems) =>
+      prevItems.map((chapter) => ({
+        ...chapter,
+        lessons: chapter.lessons.filter(
+          (lesson) => lesson.id !== deletedLessonId
+        ),
+      }))
+    );
+  }
+
+  function handleChapterDeleted(deletedChapterId: string) {
+    setItems((prevItems) =>
+      prevItems.filter((chapter) => chapter.id !== deletedChapterId)
+    );
+  }
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -241,6 +316,11 @@ export function CourseStructure({ data }: CourseStructureProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between border-b border-border">
           <CardTitle>Chapters</CardTitle>
+
+          <NewChapterModal
+            courseId={data.id}
+            onChapterCreated={handleChapterCreated}
+          />
         </CardHeader>
 
         <CardContent className="space-y-5">
@@ -288,13 +368,10 @@ export function CourseStructure({ data }: CourseStructureProps) {
                           </p>
                         </div>
 
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="cursor-pointer"
-                        >
-                          <TrashIcon className="size-4" />
-                        </Button>
+                        <DeleteChapterModal
+                          chapterId={item.id}
+                          onChapterDeleted={handleChapterDeleted}
+                        />
                       </div>
 
                       <CollapsibleContent>
@@ -332,26 +409,22 @@ export function CourseStructure({ data }: CourseStructureProps) {
                                       </Link>
                                     </div>
 
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="cursor-pointer"
-                                    >
-                                      <TrashIcon className="size-4" />
-                                    </Button>
+                                    <DeleteLessonModal
+                                      lessonId={lesson.id}
+                                      onLessonDeleted={handleLessonDeleted}
+                                    />
                                   </div>
                                 )}
                               </SortableItem>
                             ))}
                           </SortableContext>
 
-                          <div className="p-2">
-                            <Button
-                              variant="outline"
-                              className="w-full cursor-pointer"
-                            >
-                              Create New Lesson
-                            </Button>
+                          <div className="p-2 pb-0">
+                            <NewLessonModal
+                              chapterId={item.id}
+                              courseId={data.id}
+                              onLessonCreated={handleLessonCreated}
+                            />
                           </div>
                         </div>
                       </CollapsibleContent>
