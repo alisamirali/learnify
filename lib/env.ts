@@ -17,6 +17,7 @@ export const env = createEnv({
     AWS_REGION: z.string().min(1),
     STRIPE_PUBLIC_KEY: z.string().min(1),
     STRIPE_SECRET_KEY: z.string().min(1),
+    STRIPE_WEBHOOK_SECRET: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_S3_BUCKET_NAME: z.string().min(1),

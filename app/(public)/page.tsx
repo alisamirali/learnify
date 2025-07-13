@@ -6,10 +6,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { auth } from "@/lib/auth";
 import { features } from "@/lib/data";
+import { headers } from "next/headers";
 import Link from "next/link";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
   return (
     <main className="relative py-20">
       <section className="relative py-20">
@@ -33,15 +39,27 @@ export default function HomePage() {
               Explore Courses
             </Link>
 
-            <Link
-              href="/login"
-              className={buttonVariants({
-                size: "lg",
-                variant: "outline",
-              })}
-            >
-              Sign In
-            </Link>
+            {session?.user ? (
+              <Link
+                href="/dashboard"
+                className={buttonVariants({
+                  size: "lg",
+                  variant: "outline",
+                })}
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className={buttonVariants({
+                  size: "lg",
+                  variant: "outline",
+                })}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </section>

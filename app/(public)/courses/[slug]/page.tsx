@@ -2,6 +2,7 @@ import { getCourse } from "@/app/data/course/get-course";
 import { checkIfCourseIsBought } from "@/app/data/user/user.is-enrolled";
 import { RenderDescription } from "@/components/rich-text-editor/render-description";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Collapsible,
@@ -268,7 +269,14 @@ export default async function CoursePage({
               </div>
 
               {isEnrolled ? (
-                <Link href="/dashboard">Go to Course</Link>
+                <Link
+                  href="/dashboard"
+                  className={buttonVariants({
+                    className: "w-full mb-4",
+                  })}
+                >
+                  Go to Course
+                </Link>
               ) : (
                 <EnrollmentButton courseId={course.id} />
               )}
