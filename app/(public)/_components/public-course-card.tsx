@@ -54,7 +54,7 @@ export function PublicCourseCard({ course }: { course: PublicCourseType }) {
         <Link
           href={`/courses/${course.slug}`}
           className={buttonVariants({
-            className: "mt-4 w-full",
+            className: "mt-6 w-full",
           })}
         >
           Learn More

@@ -9,16 +9,22 @@ datasource db {
 }
 
 model User {
-    id            String    @id
+    id String @id
+
     name          String
     email         String
     emailVerified Boolean
     image         String?
-    createdAt     DateTime
-    updatedAt     DateTime
-    sessions      Session[]
-    accounts      Account[]
-    courses       Course[]
+
+    createdAt DateTime
+    updatedAt DateTime
+
+    sessions   Session[]
+    accounts   Account[]
+    courses    Course[]
+    enrollment Enrollment[]
+
+    stripeCustomerId String? @unique
 
     role       String?
     banned     Boolean?
@@ -30,7 +36,8 @@ model User {
 }
 
 model Session {
-    id        String   @id
+    id String @id
+
     expiresAt DateTime
     token     String
     createdAt DateTime
@@ -47,7 +54,8 @@ model Session {
 }
 
 model Account {
-    id                    String    @id
+    id String @id
+
     accountId             String
     providerId            String
     userId                String
@@ -59,41 +67,49 @@ model Account {
     refreshTokenExpiresAt DateTime?
     scope                 String?
     password              String?
-    createdAt             DateTime
-    updatedAt             DateTime
+
+    createdAt DateTime
+    updatedAt DateTime
 
     @@map("account")
 }
 
 model Verification {
-    id         String    @id
+    id String @id
+
     identifier String
     value      String
-    expiresAt  DateTime
-    createdAt  DateTime?
-    updatedAt  DateTime?
+
+    expiresAt DateTime
+    createdAt DateTime?
+    updatedAt DateTime?
 
     @@map("verification")
 }
 
 model Course {
-    id               String       @id @default(uuid())
+    id String @id @default(uuid())
+
     title            String
     description      String
     fileKey          String
     price            Float
     duration         Float
-    level            CourseLevel  @default(BEGINNER)
+    level            CourseLevel @default(BEGINNER)
     category         String
     smallDescription String
-    slug             String       @unique
-    createdAt        DateTime     @default(now())
-    updatedAt        DateTime     @updatedAt
-    status           CourseStatus @default(DRAFT)
-    user             User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId           String?
+    slug             String      @unique
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    status CourseStatus @default(DRAFT)
+    user   User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String?
 
     chapters Chapter[]
+
+    enrollment Enrollment[]
 
     @@map("course")
 }
@@ -111,14 +127,16 @@ enum CourseStatus {
 }
 
 model Chapter {
-    id       String @id @default(uuid())
+    id String @id @default(uuid())
+
     title    String
     position Int
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-    Course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-    courseId  String
+
+    Course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId String
 
     lessons Lesson[]
 
@@ -126,7 +144,8 @@ model Chapter {
 }
 
 model Lesson {
-    id           String  @id @default(uuid())
+    id String @id @default(uuid())
+
     title        String
     description  String?
     thumbnailKey String?
@@ -139,4 +158,28 @@ model Lesson {
     chapterId String
 
     @@map("lesson")
+}
+
+model Enrollment {
+    id String @id @default(uuid())
+
+    amount Int
+    status EnrollmentStatus @default(PENDING)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    Course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId String
+
+    User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
+
+    @@unique([userId, courseId])
+}
+
+enum EnrollmentStatus {
+    PENDING
+    ACTIVE
+    CANCELLED
 }
