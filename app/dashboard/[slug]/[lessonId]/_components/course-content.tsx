@@ -1,16 +1,45 @@
 "use client";
 
+import { markLessonAsCompleted } from "@/app/dashboard/[slug]/[lessonId]/actions";
 import { LessonContentType } from "@/app/data/course/get-lesson-content";
 import { RenderDescription } from "@/components/rich-text-editor/render-description";
 import { Button } from "@/components/ui/button";
+import { useConfetti } from "@/hooks/use-confetti";
 import { useConstructUrl } from "@/hooks/use-construct";
+import { useTryCatch } from "@/hooks/use-try-catch";
 import { BookIcon, CheckCircle } from "lucide-react";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 type LessonItemProps = {
   data: LessonContentType;
 };
 
 export function CourseContent({ data }: LessonItemProps) {
+  const [isPending, startTransition] = useTransition();
+  const { triggerConfetti } = useConfetti();
+
+  function handleMarkAsCompleted() {
+    startTransition(async () => {
+      const { data: result, error } = await useTryCatch(
+        markLessonAsCompleted(data.id, data.Chapter.Course.slug)
+      );
+
+      if (error) {
+        toast.error(
+          "An unexpected error occurred while marking the lesson as completed."
+        );
+        return;
+      }
+
+      if (result.status === "success") {
+        toast.success(result.message);
+        triggerConfetti();
+      } else if (result.status === "error") {
+        toast.error(result.message);
+      }
+    });
+  }
   return (
     <div className="flex flex-col h-full bg-background pl-6">
       <VideoPlayer
@@ -19,10 +48,31 @@ export function CourseContent({ data }: LessonItemProps) {
       />
 
       <div className="py-4 border-b flex items-center justify-end">
-        <Button variant="outline" className="cursor-pointer">
-          <CheckCircle className="size-4 text-green-500" />
-          Mark as Completed
-        </Button>
+        {data.lessonProgress.length > 0 ? (
+          <Button
+            variant="outline"
+            className="bg-green-500/10 text-green-500 cursor-not-allowed hover:text-green-600"
+          >
+            <CheckCircle className="size-4 text-green-500" />
+            Completed
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            className="cursor-pointer"
+            onClick={handleMarkAsCompleted}
+            disabled={isPending}
+          >
+            {isPending ? (
+              "Processing..."
+            ) : (
+              <>
+                <CheckCircle className="size-4 text-green-500" />
+                Mark as Completed
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       <div className="space-y-4 pt-6">

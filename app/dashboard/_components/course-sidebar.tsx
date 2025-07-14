@@ -9,6 +9,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
+import { useCourseProgress } from "@/hooks/use-course-progress";
 import { ChevronDown, Play } from "lucide-react";
 import { usePathname } from "next/navigation";
 
@@ -19,6 +20,8 @@ type CourseSidebarProps = {
 export function CourseSidebar({ course }: CourseSidebarProps) {
   const pathname = usePathname();
   const currentLessonId = pathname.split("/").pop();
+  const { totalLessons, completedLessons, progressPercentage } =
+    useCourseProgress({ courseData: course });
 
   return (
     <div className="w-80 border-r border-border shrink-0">
@@ -42,11 +45,15 @@ export function CourseSidebar({ course }: CourseSidebarProps) {
           <div className="space-y-2 mt-4">
             <div className="flex justify-between items-center text-xs">
               <span className="text-muted-foreground">Progress</span>
-              <span className="font-medium">4/20 lessons</span>
+              <span className="font-medium">
+                {completedLessons}/{totalLessons} lessons
+              </span>
             </div>
 
-            <Progress value={40} max={100} />
-            <p className="text-xs text-muted-foreground">40% Complete</p>
+            <Progress value={progressPercentage} max={100} />
+            <p className="text-xs text-muted-foreground">
+              {progressPercentage}% Complete
+            </p>
           </div>
         </div>
 
@@ -83,6 +90,11 @@ export function CourseSidebar({ course }: CourseSidebarProps) {
                     lesson={lesson}
                     slug={course.slug}
                     isActive={lesson.id === currentLessonId}
+                    completed={
+                      lesson.lessonProgress.find(
+                        (progress) => progress.lessonId === lesson.id
+                      )?.completed || false
+                    }
                   />
                 ))}
               </CollapsibleContent>

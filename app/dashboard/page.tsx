@@ -1,7 +1,7 @@
+import { CourseProgressCard } from "@/app/dashboard/_components/course-progress-card";
 import { getAllCourses } from "@/app/data/course/get-all-courses";
 import { getEnrolledCourses } from "@/app/data/user/get-enrolled-courses";
 import { EmptyState } from "@/components/shared/empty-state";
-import Link from "next/link";
 import { PublicCourseCard } from "../(public)/_components/public-course-card";
 
 export default async function DashboardPage() {
@@ -21,14 +21,9 @@ export default async function DashboardPage() {
       </div>
 
       {enrolledCourses.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {enrolledCourses.map((course) => (
-            <Link
-              key={course.Course.id}
-              href={`/dashboard/${course.Course.slug}`}
-            >
-              {course.Course.title}
-            </Link>
+            <CourseProgressCard key={course.Course.id} course={course} />
           ))}
         </div>
       ) : (
@@ -55,7 +50,7 @@ export default async function DashboardPage() {
               ({ Course: enrolled }) => enrolled.id === course.id
             )
         ).length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {allCourses
               .filter(
                 (course) =>
