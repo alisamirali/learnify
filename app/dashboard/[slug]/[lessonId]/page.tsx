@@ -1,5 +1,7 @@
 import { getLessonContent } from "@/app/data/course/get-lesson-content";
+import { Suspense } from "react";
 import { CourseContent } from "./_components/course-content";
+import { LessonSkeleton } from "./_components/lesson-skeleton";
 
 type Params = Promise<{
   lessonId: string;
@@ -7,6 +9,15 @@ type Params = Promise<{
 
 export default async function LessonPage({ params }: { params: Params }) {
   const { lessonId } = await params;
+
+  return (
+    <Suspense fallback={<LessonSkeleton />}>
+      <LessonContentLoader lessonId={lessonId} />
+    </Suspense>
+  );
+}
+
+async function LessonContentLoader({ lessonId }: { lessonId: string }) {
   const lesson = await getLessonContent(lessonId);
 
   return <CourseContent data={lesson} />;

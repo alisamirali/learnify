@@ -270,12 +270,12 @@ export default async function CoursePage({
 
               {isEnrolled ? (
                 <Link
-                  href="/dashboard"
+                  href={`/dashboard`}
                   className={buttonVariants({
                     className: "w-full mb-4",
                   })}
                 >
-                  Go to Course
+                  Got to Course
                 </Link>
               ) : (
                 <EnrollmentButton courseId={course.id} />
