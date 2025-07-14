@@ -1,15 +1,9 @@
 "use client";
 
-import {
-  IconDashboard,
-  IconHome,
-  IconListDetails,
-  IconPlus,
-} from "@tabler/icons-react";
+import { IconDashboard } from "@tabler/icons-react";
 import * as React from "react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
-import { NavUser } from "@/components/sidebar/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -21,33 +15,21 @@ import {
 } from "@/components/ui/sidebar";
 import Image from "next/image";
 import Link from "next/link";
+import { DashboardNavUser } from "./dashboard-user-nav";
 
 const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/admin",
+      url: "/dashboard",
       icon: IconDashboard,
-    },
-    {
-      title: "Courses",
-      url: "/admin/courses",
-      icon: IconListDetails,
-    },
-    {
-      title: "Create Course",
-      url: "/admin/courses/create",
-      icon: IconPlus,
-    },
-    {
-      title: "Landing Page",
-      url: "/",
-      icon: IconHome,
     },
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function DashboardAppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -74,7 +56,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser />
+        <DashboardNavUser />
       </SidebarFooter>
     </Sidebar>
   );
