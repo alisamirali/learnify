@@ -48,7 +48,7 @@ async function RenderCourses() {
   );
 }
 
-function AdminCourseCardSkeletonLayout() {
+export function AdminCourseCardSkeletonLayout() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-6">
       {Array.from({ length: 4 }).map((_, index) => (

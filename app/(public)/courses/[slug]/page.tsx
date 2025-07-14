@@ -1,5 +1,5 @@
 import { getCourse } from "@/app/data/course/get-course";
-import { checkIfCourseIsBought } from "@/app/data/user/user.is-enrolled";
+import { checkIfCourseIsBought } from "@/app/data/user/user-is-enrolled";
 import { RenderDescription } from "@/components/rich-text-editor/render-description";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";

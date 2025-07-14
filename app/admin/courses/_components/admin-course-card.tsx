@@ -72,7 +72,7 @@ export function AdminCourseCard({ course }: { course: AdminCourseType }) {
       <CardContent className="p-4">
         <Link
           href={`/admin/courses/${course.id}/edit`}
-          className="font-medium text-lg line-clamp-1 hover:underline group-hover:text-primary transition-colors"
+          className="font-medium text-lg line-clamp-1 hover:underline group-hover:text-primary transition-colors tracking-tight"
           title={course.title}
         >
           {course.title}
