@@ -17,11 +17,11 @@ export default async function HomePage() {
   });
 
   return (
-    <main className="relative py-20">
-      <section className="relative py-20">
-        <div className="flex flex-col items-center text-center space-y-8">
+    <main>
+      <section className="relative h-screen flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center text-center space-y-6 md:space-y-8">
           <Badge variant="outline">The Future of Online Education</Badge>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
+          <h1 className="text-3xl md:text-6xl font-bold tracking-tight">
             Elevate Your Learning Experience
           </h1>
           <p className="max-w-[700px] text-muted-foreground md:text-xl">
@@ -29,7 +29,7 @@ export default async function HomePage() {
             expert instructors, and a vibrant learning community.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 mt-8">
+          <div className="flex flex-wrap gap-4 mt-8 w-full mx-auto justify-center">
             <Link
               href="/courses"
               className={buttonVariants({
