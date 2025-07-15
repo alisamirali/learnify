@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useTryCatch } from "@/hooks/use-try-catch";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -22,18 +21,17 @@ export default function DeleteCoursePage() {
 
   function handleRemoveCourse() {
     startTransition(async () => {
-      const { data: result, error } = await useTryCatch(deleteCourse(courseId));
+      try {
+        const result = await deleteCourse(courseId);
 
-      if (error) {
+        if (result.status === "success") {
+          toast.success(result.message);
+          router.push("/admin/courses");
+        } else if (result.status === "error") {
+          toast.error(result.message);
+        }
+      } catch {
         toast.error("An unexpected error occurred while deleting the course.");
-        return;
-      }
-
-      if (result.status === "success") {
-        toast.success(result.message);
-        router.push("/admin/courses");
-      } else if (result.status === "error") {
-        toast.error(result.message);
       }
     });
   }

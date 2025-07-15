@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     };
 
     return NextResponse.json(response, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to generate presigned URL" },
       { status: 500 }

@@ -6,7 +6,6 @@ import { RenderDescription } from "@/components/rich-text-editor/render-descript
 import { Button } from "@/components/ui/button";
 import { useConfetti } from "@/hooks/use-confetti";
 import { useConstructUrl } from "@/hooks/use-construct";
-import { useTryCatch } from "@/hooks/use-try-catch";
 import { BookIcon, CheckCircle } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -21,22 +20,22 @@ export function CourseContent({ data }: LessonItemProps) {
 
   function handleMarkAsCompleted() {
     startTransition(async () => {
-      const { data: result, error } = await useTryCatch(
-        markLessonAsCompleted(data.id, data.Chapter.Course.slug)
-      );
+      try {
+        const result = await markLessonAsCompleted(
+          data.id,
+          data.Chapter.Course.slug
+        );
 
-      if (error) {
+        if (result.status === "success") {
+          toast.success(result.message);
+          triggerConfetti();
+        } else if (result.status === "error") {
+          toast.error(result.message);
+        }
+      } catch {
         toast.error(
           "An unexpected error occurred while marking the lesson as completed."
         );
-        return;
-      }
-
-      if (result.status === "success") {
-        toast.success(result.message);
-        triggerConfetti();
-      } else if (result.status === "error") {
-        toast.error(result.message);
       }
     });
   }

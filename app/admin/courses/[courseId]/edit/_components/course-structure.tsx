@@ -80,22 +80,25 @@ export function CourseStructure({ data }: CourseStructureProps) {
   // Only update state when data changes and we're not in the middle of reordering
   useEffect(() => {
     if (!isReorderingRef.current) {
-      const newItems = data.chapters
-        .sort((a, b) => a.position - b.position)
-        .map((chapter) => ({
-          id: chapter.id,
-          title: chapter.title,
-          position: chapter.position,
-          isOpen: items.find((item) => item.id === chapter.id)?.isOpen ?? true, // Preserve open state
-          lessons: chapter.lessons
-            .sort((a, b) => a.position - b.position)
-            .map((lesson) => ({
-              id: lesson.id,
-              title: lesson.title,
-              position: lesson.position,
-            })),
-        }));
-      setItems(newItems);
+      setItems((prevItems) => {
+        const newItems = data.chapters
+          .sort((a, b) => a.position - b.position)
+          .map((chapter) => ({
+            id: chapter.id,
+            title: chapter.title,
+            position: chapter.position,
+            isOpen:
+              prevItems.find((item) => item.id === chapter.id)?.isOpen ?? true, // Preserve open state
+            lessons: chapter.lessons
+              .sort((a, b) => a.position - b.position)
+              .map((lesson) => ({
+                id: lesson.id,
+                title: lesson.title,
+                position: lesson.position,
+              })),
+          }));
+        return newItems;
+      });
     }
   }, [data.chapters]);
 

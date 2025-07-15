@@ -17,7 +17,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useTryCatch } from "@/hooks/use-try-catch";
 import { chapterSchema, ChapterSchemaType } from "@/lib/zod-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
@@ -54,28 +53,27 @@ export function NewChapterModal({
 
   async function onSubmit(values: ChapterSchemaType) {
     startTransition(async () => {
-      const { data: result, error } = await useTryCatch(createChapter(values));
+      try {
+        const result = await createChapter(values);
 
-      if (error) {
-        toast.error("Failed to create chapter");
-        return;
-      }
+        if (result.status === "success") {
+          toast.success(result.message);
+          form.reset();
+          setOpen(false);
 
-      if (result.status === "success") {
-        toast.success(result.message);
-        form.reset();
-        setOpen(false);
-
-        // Call the callback to update the parent component's state
-        if (onChapterCreated && result.data) {
-          onChapterCreated({
-            id: result.data.id,
-            title: result.data.title,
-            position: result.data.position,
-          });
+          // Call the callback to update the parent component's state
+          if (onChapterCreated && result.data) {
+            onChapterCreated({
+              id: result.data.id,
+              title: result.data.title,
+              position: result.data.position,
+            });
+          }
+        } else if (result.status === "error") {
+          toast.error(result.message);
         }
-      } else if (result.status === "error") {
-        toast.error(result.message);
+      } catch {
+        toast.error("Failed to create chapter");
       }
     });
   }

@@ -7,7 +7,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useTryCatch } from "@/hooks/use-try-catch";
 import { Dialog } from "@radix-ui/react-dialog";
 import { TrashIcon } from "lucide-react";
 import { useState, useTransition } from "react";
@@ -30,23 +29,22 @@ export function DeleteLessonModal({
 
   async function onDelete() {
     startTransition(async () => {
-      const { data: result, error } = await useTryCatch(deleteLesson(lessonId));
+      try {
+        const result = await deleteLesson(lessonId);
 
-      if (error) {
-        toast.error("Failed to delete lesson");
-        return;
-      }
+        if (result.status === "success") {
+          toast.success(result.message);
+          setOpen(false);
 
-      if (result.status === "success") {
-        toast.success(result.message);
-        setOpen(false);
-
-        // Call the callback to update the parent component's state
-        if (onLessonDeleted) {
-          onLessonDeleted(lessonId);
+          // Call the callback to update the parent component's state
+          if (onLessonDeleted) {
+            onLessonDeleted(lessonId);
+          }
+        } else if (result.status === "error") {
+          toast.error(result.message);
         }
-      } else if (result.status === "error") {
-        toast.error(result.message);
+      } catch {
+        toast.error("Failed to delete lesson");
       }
     });
   }
