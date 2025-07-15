@@ -212,7 +212,7 @@ export function Uploader({ value, onChange, fileTypeAccepted }: UploaderProps) {
       }));
 
       toast.success("File deleted successfully!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete file. Please try again.");
 
       setFileState((prev) => ({
