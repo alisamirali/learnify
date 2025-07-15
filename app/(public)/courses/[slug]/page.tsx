@@ -54,10 +54,10 @@ export default async function CoursePage({
 
         <div className="mt-8 space-y-6">
           <div className="space-y-4">
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
               {course.title}
             </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed line-clamp-2">
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed line-clamp-2">
               {course.smallDescription}
             </p>
           </div>
@@ -80,7 +80,7 @@ export default async function CoursePage({
           <Separator className="my-8" />
 
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold tracking-tight">
+            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">
               Course Description:
             </h2>
 
@@ -92,17 +92,17 @@ export default async function CoursePage({
 
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold tracking-tight">
+            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">
               Course Content:
             </h2>
-            <div>
+            <p className="text-sm text-muted-foreground">
               {course.chapters.length} Chapters |{" "}
               {course.chapters.reduce(
                 (total, chapter) => total + chapter.lessons.length,
                 0
               )}{" "}
               Lessons
-            </div>
+            </p>
           </div>
 
           <div className="space-y-4">

@@ -75,7 +75,7 @@ export function CourseContent({ data }: LessonItemProps) {
       </div>
 
       <div className="space-y-4 pt-6">
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">
+        <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
           {data.title}
         </h2>
 
@@ -105,7 +105,7 @@ function VideoPlayer({ thumbnailKey, videoKey }: VideoPlayerProps) {
 
   if (!videoKey) {
     return (
-      <div className="w-full h-[600px] bg-muted rounded-lg flex items-center flex-col justify-center">
+      <div className="w-full aspect-video bg-muted rounded-lg flex items-center flex-col justify-center">
         <BookIcon className="size-16 text-primary mx-auto mb-4" />
         <p className="text-muted-foreground">
           No video available for this lesson. Please check back later.
@@ -115,7 +115,7 @@ function VideoPlayer({ thumbnailKey, videoKey }: VideoPlayerProps) {
   }
 
   return (
-    <div className="w-full h-[600px] rounded-lg overflow-hidden bg-black relative">
+    <div className="w-full aspect-video rounded-lg overflow-hidden bg-black relative">
       <video
         controls
         controlsList="nodownload"

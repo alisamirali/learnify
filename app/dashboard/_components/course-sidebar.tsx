@@ -24,7 +24,7 @@ export function CourseSidebar({ course }: CourseSidebarProps) {
     useCourseProgress({ courseData: course });
 
   return (
-    <div className="w-80 border-r border-border shrink-0">
+    <div className="w-full md:w-80 md:border-r border-border shrink-0">
       <div className="flex h-full flex-col">
         <div className="pb-4 pr-4 border-b border-border">
           <div className="flex items-center gap-3 mb-3">
