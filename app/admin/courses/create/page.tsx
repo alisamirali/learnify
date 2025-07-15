@@ -86,6 +86,9 @@ export default function CreateCoursePage() {
     return slugify(title, {
       lower: true,
       trim: true,
+      replacement: "-",
+      remove: /[^a-zA-Z0-9\s-]/g,
+      strict: true,
     });
   }
 
