@@ -12,7 +12,7 @@ export default function SuccessPage() {
 
   useEffect(() => {
     triggerConfetti();
-  }, []);
+  }, [triggerConfetti]);
 
   return (
     <div className="w-full min-h-screen flex items-center flex-1 justify-center">

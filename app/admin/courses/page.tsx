@@ -40,7 +40,7 @@ async function RenderCourses() {
     );
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {data.map((course) => (
         <AdminCourseCard key={course.id} course={course} />
       ))}
@@ -50,8 +50,8 @@ async function RenderCourses() {
 
 export function AdminCourseCardSkeletonLayout() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-6">
-      {Array.from({ length: 4 }).map((_, index) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 6 }).map((_, index) => (
         <AdminCourseCardSkeleton key={index} />
       ))}
     </div>

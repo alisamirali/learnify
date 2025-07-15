@@ -224,7 +224,7 @@ export async function createChapter(
       message: "Chapter created successfully",
       data: createdChapter,
     };
-  } catch (error) {
+  } catch {
     return {
       status: "error",
       message: "Failed to create chapter",

@@ -16,10 +16,18 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { Suspense, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-export default function VerifyRequestPage() {
+export default function VerifyRequestRoute() {
+  return (
+    <Suspense>
+      <VerifyRequestPage />
+    </Suspense>
+  );
+}
+
+function VerifyRequestPage() {
   const [otp, setOtp] = useState("");
   const [isOTPPending, startOTPTransition] = useTransition();
   const params = useSearchParams();
