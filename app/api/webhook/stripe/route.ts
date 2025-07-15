@@ -28,7 +28,10 @@ export async function POST(request: Request) {
     const customerId = session.customer as string;
 
     if (!courseId || !customerId) {
-      return new Error("Missing courseId or customerId in session metadata");
+      return new Response(
+        "Missing courseId or customerId in session metadata",
+        { status: 400 }
+      );
     }
 
     const user = await prisma.user.findUnique({
@@ -38,7 +41,9 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return new Error("User not found for the provided customerId");
+      return new Response("User not found for the provided customerId", {
+        status: 404,
+      });
     }
 
     await prisma.enrollment.update({
