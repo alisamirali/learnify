@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useTryCatch } from "@/hooks/use-try-catch";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { enrollInCourse } from "../actions";
@@ -10,18 +11,21 @@ export function EnrollmentButton({ courseId }: { courseId: string }) {
 
   function enroll() {
     startTransition(async () => {
-      try {
-        const result = await enrollInCourse(courseId);
+      const { data: result, error } = await useTryCatch(
+        enrollInCourse(courseId)
+      );
 
-        if (result.status === "success") {
-          toast.success(result.message);
-        } else if (result.status === "error") {
-          toast.error(result.message);
-        }
-      } catch {
+      if (error) {
         toast.error(
           "An unexpected error occurred while enrolling in the course."
         );
+        return;
+      }
+
+      if (result.status === "success") {
+        toast.success(result.message);
+      } else if (result.status === "error") {
+        toast.error(result.message);
       }
     });
   }

@@ -5,6 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
 import { PublicCourseCard } from "../_components/public-course-card";
 
+export const dynamic = "force-dynamic";
+
 export default function PublicCoursesPage() {
   return (
     <div className="mt-6">
